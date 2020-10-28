@@ -6,36 +6,36 @@ Aggregating the data of electric vehicle charging points from all countries acro
 
 ## Countries included:
 
-    - [ ] Austria
-    - [ ] Belgium
-    - [ ] Bulgaria
-    - [ ] Croatia
-    - [ ] Cyprus
-    - [ ] Czech Republic
-    - [ ] Denmark
-    - [ ] Estonia
-    - [ ] Finland
-    - [ ] France
-    - [ ] Germany
-    - [ ] Greece
-    - [ ] Hungary
-    - [ ] Iceland
-    - [x] Ireland
-    - [ ] Italy
-    - [ ] Latvia
-    - [ ] Liechtenstein
-    - [ ] Lithuania
-    - [ ] Luxembourg
-    - [ ] Malta
-    - [ ] Netherlands
-    - [ ] Norway
-    - [ ] Poland
-    - [ ] Portugal
-    - [ ] Romania
-    - [ ] Slovakia
-    - [ ] Slovenia
-    - [ ] Spain
-    - [ ] Sweden'
-    - [ ] Switzerland
-    - [ ] Turkey
-    - [ ] United Kingdom
+- [ ] Austria
+- [ ] Belgium
+- [ ] Bulgaria
+- [ ] Croatia
+- [ ] Cyprus
+- [ ] Czech Republic
+- [ ] Denmark
+- [ ] Estonia
+- [ ] Finland
+- [ ] France
+- [ ] Germany
+- [ ] Greece
+- [ ] Hungary
+- [ ] Iceland
+- [x] Ireland
+- [ ] Italy
+- [ ] Latvia
+- [ ] Liechtenstein
+- [ ] Lithuania
+- [ ] Luxembourg
+- [ ] Malta
+- [ ] Netherlands
+- [ ] Norway
+- [ ] Poland
+- [ ] Portugal
+- [ ] Romania
+- [ ] Slovakia
+- [ ] Slovenia
+- [ ] Spain
+- [ ] Sweden
+- [ ] Switzerland
+- [ ] Turkey
+- [ ] United Kingdom
