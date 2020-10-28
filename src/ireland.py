@@ -1,23 +1,17 @@
 #!/usr/bin/env python
 
-import csv
+"""Scraper for Republic of Ireland."""
+
 import os.path
-import shutil
 import sys
 
-import requests
-import requests_cache
-
-from utils import ensure_dir_exists
+import common
+from utils import download_archive, ensure_dir_exists, export_csv
 
 
 DATASET_URL = 'http://www.cpinfo.ie/data/201907a.zip'
 DATASET_NAME = '201907a.txt'
 
-CHUNK_SIZE = 128
-
-# Maximum lines that should be included in a single final dataset instance.
-MAX_EXPORT_DATASET_LINES = 30000
 EXPORT_DATASET_NAME = 'ireland'
 EXPORT_DATASET_EXT = 'csv'
 
@@ -31,45 +25,31 @@ FIELD_NAMES = [
 ]
 
 
-# All responses will be cached to a sqlite database.
-# By default requests doesn't do caching.
-# Moreover some dataset servers don't support caching.
-# Thus we build our own cache locally.
-# Delete the cache if you want to redownload everything.
-requests_cache.install_cache('cache')
-
-
-def download(save_dir):
-    res = requests.get(DATASET_URL, stream=True)
-    print(res)
-    # We could use tempfiles if these intermediate files take too much space.
-    # However the files could be useful for debugging.
-    with open(os.path.join(save_dir, 'dataset.zip'), 'wb') as f:
-        for chunk in res.iter_content(chunk_size=CHUNK_SIZE):
-            f.write(chunk)
-    shutil.unpack_archive(os.path.join(
-        save_dir, 'dataset.zip'), extract_dir=save_dir)
-
-
 def preprocess(line):
     """
-    Preprocess lines in dataset, line-by-line.
+    Transform the given raw line into a structure suitable for our dataset.
 
-    Each line in the dataset has the following tab-separated parts:
-    Date (yyyymmdd),
-    Time (hhmm),
-    Charge Point Id,
-    Charge Point Type {StandardType2, CHAdeMO, CCS, FastAC},
-    Status {OOS | Out of Service, OOC | Out of Contact, Part | Partially Occupied, Occ | Fully Occupied, Unknown | Unknown},
-    Coordinates,
-    Address,
-    Longitude,
-    Latitude
+    A line is a string with the following tab-separated parts:
+        Date (yyyymmdd),
+        Time (hhmm),
+        Charge Point Id,
+        Charge Point Type {StandardType2, CHAdeMO, CCS, FastAC},
+        Status {OOS | Out of Service, OOC | Out of Contact, Part |
+                Partially Occupied, Occ | Fully Occupied, Unknown | Unknown},
+        Coordinates,
+        Address,
+        Longitude,
+        Latitude
 
-    The following fields will be used: Charge Point Id, Charge Point Type, Status, Address, Longitude, Latitude.
+    The following fields will be used:
+        Charge Point Id, Charge Point Type, Status, Address, Longitude,
+        Latitude.
+
+    The output is a dict mapping from field name to value.
     """
     try:
-        date, time, charge_point_id, charge_point_type, status, coordinates, address, longitude, latitude = line.strip().split('\t')
+        (date, time, charge_point_id, charge_point_type, status, coordinates,
+         address, longitude, latitude) = line.strip().split('\t')
         return {
             "charge_point_id": charge_point_id,
             "charge_point_type": charge_point_type,
@@ -81,13 +61,6 @@ def preprocess(line):
     except Exception as exc:
         print('Error processing {}: {}'.format(line, exc))
         return {k: None for k in FIELD_NAMES}
-
-
-def export(save_path, lines):
-    with open(save_path, 'w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=FIELD_NAMES)
-        writer.writeheader()
-        writer.writerows(lines)
 
 
 def main():
@@ -102,11 +75,11 @@ def main():
     ensure_dir_exists(save_dir)
 
     # Download dataset and extract it
-    download(save_dir)
+    download_archive(DATASET_URL, save_dir)
     input_path = os.path.join(save_dir, DATASET_NAME)
 
     # Read all latest data points into a dict (memory heavy)
-    # Replace incorrect characters with ? as the dataset has some UTF-8 problems
+    # Replace incorrect characters with ? as the dataset has UTF-8 problems
     d = {}
     with open(input_path, errors='replace') as f:
         for line in f:
@@ -116,10 +89,13 @@ def main():
                 # Take latest point as canon
                 d[data_point['charge_point_id']] = data_point
             except Exception as exc:
-                print('Exception processing line {} (preprocessed as {}): {}'.format(line, data_point, exc))
-    out_path = os.path.join(save_dir, '{}.{}'.format(EXPORT_DATASET_NAME, EXPORT_DATASET_EXT))
-    with open(out_path, 'w'):
-        export(out_path, d.values())
+                print('Exception processing line {} (preprocessed as {}): {}'
+                      .format(line, data_point, exc))
+
+    # Export the processed data points
+    out_path = os.path.join(save_dir, '{}.{}'.format(EXPORT_DATASET_NAME,
+                                                     EXPORT_DATASET_EXT))
+    export_csv(out_path, FIELD_NAMES, d.values())
 
 
 if __name__ == '__main__':

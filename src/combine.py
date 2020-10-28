@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+"""
+Module for combining the data from all countries into a single dataset.
+Country data must already exist.
+"""
+
 import csv
 import os.path
 import sys
