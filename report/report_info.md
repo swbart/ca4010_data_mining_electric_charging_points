@@ -32,6 +32,14 @@ While processing the precompiled dataset at cpinfo we have come across the issue
 
 There also exists https://data.gov.ie/dataset/ev-charge-points, which is a government dataset of all charging points in Cork for July 2018. We can compare our final Irish dataset against this "sub" dataset to ensure there is consistency (within historic limits).
 
+### France
+
+France has some datasets at https://www.data.gouv.fr/en/datasets/fichier-consolide-des-bornes-de-recharge-pour-vehicules-electriques/ and https://github.com/etalab/notebooks/blob/master/irve/irve.ipynb
+
+### Overall validation
+
+We can use various aggregated statistics that indicate how many charging points are there per countries in Europe, such as https://ec.europa.eu/transport/facts-fundings/scoreboard/compare/energy-union-innovation/ev-charging-points_en (2017 estimate). Each country's dataset should have the approximate number of charging points indicated.
+
 ## Algorithm description
 
 ## Results and analysis
