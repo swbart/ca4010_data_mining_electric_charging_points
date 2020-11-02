@@ -36,6 +36,15 @@ There also exists https://data.gov.ie/dataset/ev-charge-points, which is a gover
 
 France has some datasets at https://www.data.gouv.fr/en/datasets/fichier-consolide-des-bornes-de-recharge-pour-vehicules-electriques/ and https://github.com/etalab/notebooks/blob/master/irve/irve.ipynb
 
+### All European countries
+
+After further research we have discovered that there exist global maps that list the charging points at any part of the globe!
+This simplified our job significantly. Instead of having to scrape every European country by ourselves, we can just scrape one of the
+exchaustive world maps for European data.
+
+One such map is https://openchargemap.org. It is a public initiative that transparently collects the data of charging points from all over the world.
+We can use the repo at https://github.com/openchargemap/ocm-data for recent data snapshots.
+
 ### Overall validation
 
 We can use various aggregated statistics that indicate how many charging points are there per countries in Europe, such as https://ec.europa.eu/transport/facts-fundings/scoreboard/compare/energy-union-innovation/ev-charging-points_en (2017 estimate). Each country's dataset should have the approximate number of charging points indicated.
