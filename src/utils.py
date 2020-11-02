@@ -3,9 +3,11 @@
 """Reusable utility functions."""
 
 import csv
+import gzip
 from itertools import zip_longest
 import os.path
 from pathlib import Path
+import re
 import requests
 import shutil
 
@@ -29,18 +31,42 @@ def grouper(n, iterable, fillvalue=None):
     return zip_longest(fillvalue=fillvalue, *args)
 
 
-def download_archive(archive_url, unpack_dir):
+def uncompress_gzip(gzip_path, target_dir):
+    """
+    Uncompress a gzip file into the target directory.
+
+    Credits to https://stackoverflow.com/a/57923425.
+    """
+    # Gzip is for compressing a single file
+    # Get the target file name
+    # Note that this will override the archive if it does not end in .gz
+    filename = os.path.split(gzip_path)[-1]
+    filename = re.sub(r"\.gz$", "", filename, flags=re.IGNORECASE)
+
+    with gzip.open(gzip_path, 'rb') as f_in:
+        with open(os.path.join(target_dir, filename), 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+
+
+# Add the ability to "unarchive" ".gz" files using the shutil.unpack_archive
+# function
+shutil.register_unpack_format('gz',
+                              ['.gz', ],
+                              uncompress_gzip)
+
+
+def download_archive(archive_url, unpack_dir, archive_name='dataset.zip'):
     """Download the archive at the given URL and unpack it in the specified
     directory."""
     res = requests.get(archive_url, stream=True)
     print(res)
     # We could use tempfiles if these intermediate files take too much space.
     # However the files could be useful for debugging.
-    with open(os.path.join(unpack_dir, 'dataset.zip'), 'wb') as f:
+    with open(os.path.join(unpack_dir, archive_name), 'wb') as f:
         for chunk in res.iter_content(chunk_size=IO_CHUNK_SIZE):
             f.write(chunk)
     shutil.unpack_archive(os.path.join(
-        unpack_dir, 'dataset.zip'), extract_dir=unpack_dir)
+        unpack_dir, archive_name), extract_dir=unpack_dir)
 
 
 def export_csv(save_path, fields, lines):
