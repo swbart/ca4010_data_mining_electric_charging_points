@@ -25,6 +25,41 @@ DATASET_REFERENCE_SCHEMA = 'reference.json'
 
 EXPORT_DATASET_NAME = 'openchargemap.csv'
 
+CONNECTION_TITLES = [
+  'Type 2 (Socket Only)',
+  'BS1363 3 Pin 13 Amp',
+  'CHAdeMO',
+  'Type 1 (J1772)',
+  'Tesla (Roadster)',
+  'Blue Commando (2P+E)',
+  'Type 2 (Tethered Connector)',
+  'CCS (Type 2)',
+  'Tesla (Model S/X)',
+  'Tesla Supercharger',
+  'Europlug 2-Pin (CEE 7/16)',
+  'SCAME Type 3C (Schneider-Legrand)',
+  'CEE 7/5',
+  'CEE 7/4 - Schuko - Type F',
+  'NEMA 5-20R',
+  'CEE 3 Pin',
+  'CEE 5 Pin',
+  'T13 - SEC1011 ( Swiss domestic 3-pin ) - Type J',
+  'Avcon Connector',
+  'SCAME Type 3A (Low Power)',
+  'Type I (AS 3112)',
+  'CCS (Type 1)',
+  'Wireless Charging',
+  'IEC 60309 5-pin',
+  'CEE+ 7 Pin',
+  'IEC 60309 3-pin',
+  'XLR Plug (4 pin)',
+  'Three Phase 5-Pin (AS/NZ 3123)',
+]
+
+AGGREGATED_CONNECTIONS = {}
+for title in CONNECTION_TITLES:
+  AGGREGATED_CONNECTIONS[title] = 0
+
 FIELD_NAMES = [
   'uuid',
   'operator_id',
@@ -34,8 +69,7 @@ FIELD_NAMES = [
   'latitude',
   'longitude',
   'num_points',
-]
-
+] + CONNECTION_TITLES
 
 def parse_point(line):
     """
@@ -57,8 +91,20 @@ def preprocess_point(point):
     """
     # TODO: Replace IDs with actual information available at the
     # reference schema
-    # TODO: Aggregate statistics over each point, i.e. number of points with
+
+    # Aggregate statistics over each point, i.e. number of points with
     # connection type X
+    aggr_connections = AGGREGATED_CONNECTIONS.copy()
+    for conn in point['Connections']:
+      title = conn["ConnectionType"]["Title"].strip()
+      if title == "Unknown":
+        continue
+
+      if title in aggr_connections:
+        aggr_connections[title] += 1
+      else:
+        aggr_connections[title] = 1
+      
     return {
       'uuid': point['UUID'],
       'operator_id': point['OperatorID'],
@@ -73,13 +119,14 @@ def preprocess_point(point):
       'latitude': point['AddressInfo']['Latitude'],
       'longitude': point['AddressInfo']['Longitude'],
       'num_points': point['NumberOfPoints'],
+      **aggr_connections,
     }
 
 
 def main():
     args = sys.argv[1:]
     if len(args) != 1:
-        print('Usage: python ireland.py [dataset target directory]')
+        print('Usage: python '+ sys.argv[0] +' [dataset target directory]')
         sys.exit(1)
     save_dir = args[0]
     print('Processing dataset at {}'.format(os.path.abspath(save_dir)))
