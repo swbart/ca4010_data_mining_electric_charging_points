@@ -56,9 +56,38 @@ CONNECTION_TITLES = [
   'Three Phase 5-Pin (AS/NZ 3123)',
 ]
 
+def connection_title_to_field_name(title):
+  if isinstance(title, list):
+    output = []
+    for x in title:
+      output.append(connection_title_to_field_name(x))
+    return output
+  
+  # Remove all paranthesis.
+  title = title.replace('(', '')
+  title = title.replace(')', '')
+
+  # Convert to lower case and split.
+  title_split = title.lower().split()
+
+  # Remove any '-' that's by itself. This will turn "A - B" into "A B", but
+  # will leave "A-B" as is.
+  for i in range(len(title_split) - 1, -1, -1):
+    if title_split[i] == '' or title_split[i] == '-':
+      title_split.pop(i)
+  
+  # Join the split title using '_'.
+  title = '_'.join(title_split)
+
+  # Append num_connections_ and return.
+  return 'num_connections_' + title
+
+def CONNECTION_FIELD_NAMES():
+  return connection_title_to_field_name(CONNECTION_TITLES)
+
 AGGREGATED_CONNECTIONS = {}
-for title in CONNECTION_TITLES:
-  AGGREGATED_CONNECTIONS[title] = 0
+for field_name in CONNECTION_FIELD_NAMES():
+  AGGREGATED_CONNECTIONS[field_name] = 0
 
 FIELD_NAMES = [
   'uuid',
@@ -69,7 +98,7 @@ FIELD_NAMES = [
   'latitude',
   'longitude',
   'num_points',
-] + CONNECTION_TITLES
+] + CONNECTION_FIELD_NAMES()
 
 def parse_point(line):
     """
@@ -83,6 +112,21 @@ def is_european(point):
     """Returns true if the continent code for the given point is Europe."""
     return point['AddressInfo']['Country']['ContinentCode'] == 'EU'
 
+def aggregate_points(point):
+  # Aggregate statistics over each point, i.e. number of points with
+  # connection type X
+  aggr_connections = AGGREGATED_CONNECTIONS.copy()
+  for conn in point['Connections']:
+    title = conn["ConnectionType"]["Title"].strip()
+    if title == "Unknown":
+      continue
+
+    title = connection_title_to_field_name(title)
+    if title in aggr_connections:
+      aggr_connections[title] += 1
+    else:
+      aggr_connections[title] = 1
+  return aggr_connections
 
 def preprocess_point(point):
     """
@@ -91,19 +135,6 @@ def preprocess_point(point):
     """
     # TODO: Replace IDs with actual information available at the
     # reference schema
-
-    # Aggregate statistics over each point, i.e. number of points with
-    # connection type X
-    aggr_connections = AGGREGATED_CONNECTIONS.copy()
-    for conn in point['Connections']:
-      title = conn["ConnectionType"]["Title"].strip()
-      if title == "Unknown":
-        continue
-
-      if title in aggr_connections:
-        aggr_connections[title] += 1
-      else:
-        aggr_connections[title] = 1
       
     return {
       'uuid': point['UUID'],
@@ -119,7 +150,7 @@ def preprocess_point(point):
       'latitude': point['AddressInfo']['Latitude'],
       'longitude': point['AddressInfo']['Longitude'],
       'num_points': point['NumberOfPoints'],
-      **aggr_connections,
+      **aggregate_points(point),
     }
 
 
