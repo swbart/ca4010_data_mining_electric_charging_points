@@ -58,10 +58,7 @@ CONNECTION_TITLES = [
 
 def connection_title_to_field_name(title):
   if isinstance(title, list):
-    output = []
-    for x in title:
-      output.append(connection_title_to_field_name(x))
-    return output
+    return [connection_title_to_field_name(x) for x in title]
   
   # Remove all paranthesis.
   title = title.replace('(', '')
